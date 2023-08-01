@@ -9,7 +9,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Cast from '../components/cast';
 import MovieList from '../components/movieList';
 import Loading from '../components/loading';
-import { fallbackMoviesPoster, fetchMovieCredits, fetchMovieDetails, image500 } from '../api/moviedb';
+import { fallbackMoviesPoster, fetchMovieCredits, fetchMovieDetails, fetchSimilarMovies, image500 } from '../api/moviedb';
 
 var { width, height } = Dimensions.get('window');
 const ios = Platform.OS == 'ios';
@@ -31,6 +31,7 @@ export default function MovieScreen() {
         setLoading(true);
         getMovieDetails(item.id);
         getMovieCredits(item.id);
+        getSimilarMovies(item.id);
     }, [item]);
 
     const getMovieDetails = async id => {
@@ -44,6 +45,12 @@ export default function MovieScreen() {
         const data = await fetchMovieCredits(id);
         // console.log('get movieCredits: ', data);
         if (data && data.cast) setCast(data.cast)
+    }
+
+    const getSimilarMovies = async id => {
+        const data = await fetchSimilarMovies(id);
+        //  console.log('get similar movies: ', data);
+        if (data && data.results) setSimilarMovies(data.results);
     }
 
     return (
@@ -141,7 +148,7 @@ export default function MovieScreen() {
             <Cast navigation={navigation} cast={cast} />
 
             {/* similar movies section */}
-            {/* <MovieList title="Similar Movies" hideSeeAll={true} data={similarMovies}/> */}
+            <MovieList title="Similar Movies" hideSeeAll={true} data={similarMovies}/>
         </ScrollView>
     )
 }
