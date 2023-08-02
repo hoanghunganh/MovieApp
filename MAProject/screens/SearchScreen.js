@@ -14,61 +14,72 @@ const {width, height} = Dimensions.get('window');
 export default function SearchScreen() {
     const navigation = useNavigation();
     const [results, setResults] = useState([]);
-    const [loading, setLoading]= useState(false);
-    const [Page, setPage] = useState(1);
-    const [totalPage, settotalPage] = useState(1);
+    const [loading, setLoading] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [inputValue, setInputValue] = useState('');
 
-    const handleSearch = value => {
-       if (value && value.length > 2){
-        setLoading(true);
-        searchMovies({
-            query: value, 
-            include_adult: 'false', 
-            language: 'en-US', 
-            page: Page,
-        }).then(data => {
-            setLoading(false);
-            // console.log('got movies: ', data);
-            console.log('got total page: ', data.total_pages)
-            if (data && data.results) setResults(data.results);
-            if (data && data.total_pages) settotalPage(data.total_pages);
-        })
-       }else {
+    const handleSearch = (value, page) => {
+        console.log("Current page:", page);
+        if (value && value.length > 2) {
+            setLoading(true);
+            searchMovies({
+                query: value,
+                include_adult: 'false',
+                language: 'en-US',
+                page: page,
+            }).then(data => {
+                setLoading(false);
+                // console.log("API response:", data);
+                if (data && data.results) setResults(data.results);
+                if (data && data.total_pages) setTotalPages(data.total_pages);
+            });
+        } else {
             setLoading(false);
             setResults([]);
-       }
+        }
     }
 
     const renderPageButtons = () => {
         const buttons = [];
-        for (let i = 1; i <= totalPage; i++) {
+        for (let i = 1; i <= totalPages; i++) {
             buttons.push(
-                <TouchableOpacity onPress={handlePageChange(i)}  key={i} className="flex-row justify-center items-center bg-slate-100">
-                    <Text className="text-black">
+                <TouchableOpacity
+                    onPress={() => handlePageChange(i)}
+                    key={i}
+                    style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}
+                >
+                    <Text style={{ color: '#eab308', padding: 5 }}>
                         {i}
                     </Text>
                 </TouchableOpacity>
             )
         }
-        console.log('button:', buttons)
         return buttons;
     }
-    
-    const handlePageChange = (page)  => {
-        setPage(page);
-        handleSearch([]);
-    }
-    const handleTextDebounce = useCallback(debounce(handleSearch, 400), []);
 
-  return (
+    const handlePageChange = (page) => {
+        console.log("Page changed to:", page);
+        setCurrentPage(page);
+        handleSearch(inputValue, page); // Pass inputValue to handleSearch
+        console.log("inputValue la: ", inputValue);
+    }
+
+    const handleTextDebounce = useCallback(debounce((value) => {
+        console.log('Value la: ', value)
+        setInputValue(value); // Update inputValue state
+        handleSearch(value, currentPage); // Pass value and currentPage to handleSearch
+    }, 400), [] );
+    
+    return (
     <SafeAreaView className='bg-neutral-800 flex-1'>
         <View className="mx-4 mb-3 flex-row justify-between items-center border border-neutral-500 rounded-full">
-            <TextInput 
-                onChangeText={handleTextDebounce}
-                placeholder='Search Movie'
-                placeholderTextColor={'lightgray'}
-                className="pb-1 pl-6 flex-1 text-base font-semibold text-white tracking-wider"
-            />
+        <TextInput 
+            onChangeText={(value) => handleTextDebounce(value)}
+            placeholder='Tìm kiếm phim'
+            placeholderTextColor={'lightgray'}
+            className="pb-1 pl-6 flex-1 text-base font-semibold text-white tracking-wider"
+        />
             <TouchableOpacity 
                 onPress={()=>navigation.navigate('Home')}
                 className="rounded-full p-3 m-1 bg-neutral-500"
@@ -114,11 +125,11 @@ export default function SearchScreen() {
                                 )
                             })
                         }
-                        <View className="flex-row items-center justify-center">
-                            {
-                                renderPageButtons()
-                            }
-                        </View>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                        {
+                            renderPageButtons()
+                        }
                     </View>
                 </ScrollView>
             ):(
@@ -129,7 +140,6 @@ export default function SearchScreen() {
                 </View>
             )
         }
-
     </SafeAreaView>
   )
 }
