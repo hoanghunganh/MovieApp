@@ -7,6 +7,7 @@ import { useState } from 'react';
 import Loading from '../components/loading';
 import { fallbackMoviesPoster, image185, searchMovies } from '../api/moviedb';
 import { debounce } from 'lodash'
+import { Carousel } from 'react-native-snap-carousel-v4';
 
 const {width, height} = Dimensions.get('window');
 
@@ -14,8 +15,8 @@ export default function SearchScreen() {
     const navigation = useNavigation();
     const [results, setResults] = useState([]);
     const [loading, setLoading]= useState(false);
-
-    let movieName = "Ant-man and the Wasp: Quantumania"
+    const [Page, setPage] = useState(1);
+    const [totalPage, settotalPage] = useState(1);
 
     const handleSearch = value => {
        if (value && value.length > 2){
@@ -24,11 +25,13 @@ export default function SearchScreen() {
             query: value, 
             include_adult: 'false', 
             language: 'en-US', 
-            page: '1'
+            page: Page,
         }).then(data => {
             setLoading(false);
             // console.log('got movies: ', data);
+            console.log('got total page: ', data.total_pages)
             if (data && data.results) setResults(data.results);
+            if (data && data.total_pages) settotalPage(data.total_pages);
         })
        }else {
             setLoading(false);
@@ -36,6 +39,25 @@ export default function SearchScreen() {
        }
     }
 
+    const renderPageButtons = () => {
+        const buttons = [];
+        for (let i = 1; i <= totalPage; i++) {
+            buttons.push(
+                <TouchableOpacity onPress={handlePageChange(i)}  key={i} className="flex-row justify-center items-center bg-slate-100">
+                    <Text className="text-black">
+                        {i}
+                    </Text>
+                </TouchableOpacity>
+            )
+        }
+        console.log('button:', buttons)
+        return buttons;
+    }
+    
+    const handlePageChange = (page)  => {
+        setPage(page);
+        handleSearch([]);
+    }
     const handleTextDebounce = useCallback(debounce(handleSearch, 400), []);
 
   return (
@@ -92,6 +114,11 @@ export default function SearchScreen() {
                                 )
                             })
                         }
+                        <View className="flex-row items-center justify-center">
+                            {
+                                renderPageButtons()
+                            }
+                        </View>
                     </View>
                 </ScrollView>
             ):(
