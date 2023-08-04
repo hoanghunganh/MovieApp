@@ -7,7 +7,8 @@ import { useState } from 'react';
 import Loading from '../components/loading';
 import { fallbackMoviesPoster, image185, searchMovies } from '../api/moviedb';
 import { debounce } from 'lodash'
-import { Carousel } from 'react-native-snap-carousel-v4';
+import Carousel from 'react-native-snap-carousel';
+import { useRef } from 'react';
 
 const {width, height} = Dimensions.get('window');
 
@@ -18,6 +19,8 @@ export default function SearchScreen() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [inputValue, setInputValue] = useState('');
+
+    const carouselRef = useRef();
 
     const handleSearch = (value, page) => {
         console.log("Current page:", page);
@@ -40,30 +43,32 @@ export default function SearchScreen() {
         }
     }
 
-    const renderPageButtons = () => {
-        const buttons = [];
-        for (let i = 1; i <= totalPages; i++) {
-            buttons.push(
-                <TouchableOpacity
-                    onPress={() => handlePageChange(i)}
-                    key={i}
-                    style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}
-                >
-                    <Text style={{ color: '#eab308', padding: 5 }}>
-                        {i}
-                    </Text>
-                </TouchableOpacity>
-            )
-        }
-        return buttons;
-    }
+    // const renderPageButtons = () => {
+    //     const buttons = [];
+    //     for (let i = 1; i <= totalPages; i++) {
+    //         buttons.push(
+    //             <TouchableOpacity
+    //                 onPress={() => handlePageChange(i)}
+    //                 key={i}
+    //                 style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}
+    //             >
+    //                 <Text style={{ color: '#eab308', padding: 5 }}>
+    //                     {i}
+    //                 </Text>
+    //             </TouchableOpacity>
+    //         )
+    //     }
+    //     return buttons
+    // }
+   
 
-    const handlePageChange = (page) => {
+      const handlePageChange = (page) => {
         console.log("Page changed to:", page);
         setCurrentPage(page);
         handleSearch(inputValue, page); // Pass inputValue to handleSearch
+        carouselRef.current.snapToItem(page - 1); // Update the activeIndex of the Carousel
         console.log("inputValue la: ", inputValue);
-    }
+      }
 
     const handleTextDebounce = useCallback(debounce((value) => {
         console.log('Value la: ', value)
@@ -71,8 +76,30 @@ export default function SearchScreen() {
         handleSearch(value, currentPage); // Pass value and currentPage to handleSearch
     }, 400), [] );
     
+    const renderCarouselItem = ({ item }) => {
+        const isActive = item === currentPage;
+        return (
+          <TouchableOpacity
+            onPress={() => handlePageChange(item)}
+            key={item}
+            style={{
+                flexDirection: 'row',
+                justifyContent: 'center',
+                alignItems: 'center',
+                backgroundColor: isActive ? '#eab308' : 'transparent',
+                borderRadius: 5,
+                padding: 5,
+                marginHorizontal: 5}}
+            >
+            <Text style={{ color: isActive ? 'black' : '#eab308', padding: 5 }}>
+              {item}
+            </Text>
+          </TouchableOpacity>
+        );
+      };
+
     return (
-    <SafeAreaView className='bg-neutral-800 flex-1'>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'black' }}>
         <View className="mx-4 mb-3 flex-row justify-between items-center border border-neutral-500 rounded-full">
         <TextInput 
             onChangeText={(value) => handleTextDebounce(value)}
@@ -126,10 +153,15 @@ export default function SearchScreen() {
                             })
                         }
                     </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                        {
-                            renderPageButtons()
-                        }
+                    <View className="flex-row">
+                    <Carousel
+                        ref={carouselRef}
+                        data={Array.from({ length: totalPages }, (_, i) => i + 1)}
+                        renderItem={renderCarouselItem}
+                        sliderWidth={width}
+                        itemWidth={width*0.1}a
+                        slideStyle={{ display: 'flex', alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between'}}
+                    />
                     </View>
                 </ScrollView>
             ):(
