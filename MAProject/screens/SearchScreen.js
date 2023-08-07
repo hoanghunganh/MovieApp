@@ -66,8 +66,9 @@ export default function SearchScreen() {
         console.log("Page changed to:", page);
         setCurrentPage(page);
         handleSearch(inputValue, page); // Pass inputValue to handleSearch
+        console.log("carouselRef.current:", carouselRef.current); // Add this line
         carouselRef.current.snapToItem(page - 1); // Update the activeIndex of the Carousel
-        console.log("inputValue la: ", inputValue);
+        // console.log("inputValue la: ", inputValue);
       }
 
     const handleTextDebounce = useCallback(debounce((value) => {
@@ -153,16 +154,7 @@ export default function SearchScreen() {
                             })
                         }
                     </View>
-                    <View className="flex-row">
-                    <Carousel
-                        ref={carouselRef}
-                        data={Array.from({ length: totalPages }, (_, i) => i + 1)}
-                        renderItem={renderCarouselItem}
-                        sliderWidth={width}
-                        itemWidth={width*0.1}a
-                        slideStyle={{ display: 'flex', alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between'}}
-                    />
-                    </View>
+                    
                 </ScrollView>
             ):(
                 <View className="flex-row justify-center">
@@ -172,6 +164,20 @@ export default function SearchScreen() {
                 </View>
             )
         }
+        <View className="flex-row">
+        {
+            results.length > 0 &&
+            <Carousel
+                        ref={carouselRef}
+                        data={Array.from({ length: totalPages }, (_, i) => i + 1)}
+                        renderItem={renderCarouselItem}
+                        sliderWidth={width}
+                        itemWidth={width*0.1}a
+                        slideStyle={{ display: 'flex', alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between'}}
+            />
+        }            
+                    
+        </View>
     </SafeAreaView>
   )
 }
